@@ -12,7 +12,7 @@
 #include "rt-lib.h"
 #include "parameters.h"
 
-//emulates the controller
+//emulates the controller active backup
 
 static int keep_on_running = 1;
 static int replica_attiva = 1;	//la replica parte attiva
@@ -58,30 +58,31 @@ void * acquire_filter_loop(void * par) {
 	while (keep_on_running) 
 	{
 			wait_next_activation(th);
+			if(replica_attiva){
+				// PRELIEVO DATI dalla coda del PLANT
+				if (mq_receive(sensor_qd, message,MAX_MSG_SIZE,NULL) == -1){
+					perror ("acquire filter loop: mq_receive (actuator)");	
+					break;						//DEBUG
+				}
+				else{ 
+					buffer[head] = atoi(message);
+					sum += buffer[head];
+					head = (head+1)%BUF_SIZE;
+					cnt--;
 
-			// PRELIEVO DATI dalla coda del PLANT
-			if (mq_receive(sensor_qd, message,MAX_MSG_SIZE,NULL) == -1){
-				perror ("acquire filter loop: mq_receive (actuator)");	
-				break;						//DEBUG
-			}
-			else{ 
-				buffer[head] = atoi(message);
-				sum += buffer[head];
-				head = (head+1)%BUF_SIZE;
-				cnt--;
+					//printf("\t\t\t\tbuffer[%d]=%d, sum=%d\n",head,buffer[head],sum); //DEBUG
 
-				//printf("\t\t\t\tbuffer[%d]=%d, sum=%d\n",head,buffer[head],sum); //DEBUG
-
-				// calcolo media sulle ultime BUF_SIZE letture
-				if (cnt == 0) {
-					cnt = BUF_SIZE;
-					pthread_mutex_lock(&shared_avg_sensor.lock);
-					shared_avg_sensor.value = sum/BUF_SIZE;
-					//printf("\t\t\t\tavg_sensor.value=%d\n",shared_avg_sensor.value); //DEBUG
-					pthread_mutex_unlock(&shared_avg_sensor.lock);
-					sum = 0;
+					// calcolo media sulle ultime BUF_SIZE letture
+					if (cnt == 0) {
+						cnt = BUF_SIZE;
+						pthread_mutex_lock(&shared_avg_sensor.lock);
+						shared_avg_sensor.value = sum/BUF_SIZE;
+						//printf("\t\t\t\tavg_sensor.value=%d\n",shared_avg_sensor.value); //DEBUG
+						pthread_mutex_unlock(&shared_avg_sensor.lock);
+						sum = 0;
+					}	
 				}	
-			}	
+			}
 		}
 
 	/* Clear */
@@ -117,9 +118,9 @@ void * control_loop(void * par) {
 		exit (1);
 	}
 
-	pthread_mutex_lock(&last_original_reference.lock);
-	unsigned int reference = last_original_reference.value; //la reference della replica viene settata dal watchdog attraverso l'hearthbeat
-	pthread_mutex_unlock(&last_original_reference.lock);
+	
+	unsigned int reference = 110; //la reference della replica viene settata dal watchdog attraverso l'hearthbeat
+	
 
 	unsigned int plant_state = 0;
 	int error = 0;
@@ -128,32 +129,41 @@ void * control_loop(void * par) {
 	while (keep_on_running) 
 	{
 			wait_next_activation(th);
+			if(replica_attiva){
+				// legge il plant state 
+				pthread_mutex_lock(&shared_avg_sensor.lock);
+				plant_state = shared_avg_sensor.value;
+				pthread_mutex_unlock(&shared_avg_sensor.lock);
 
-			// legge il plant state 
-			pthread_mutex_lock(&shared_avg_sensor.lock);
-			plant_state = shared_avg_sensor.value;
-			pthread_mutex_unlock(&shared_avg_sensor.lock);
+				pthread_mutex_lock(&last_original_reference.lock);
+				reference=last_original_reference.value; //mi segno l'ultima reference che ha mandato il wd
+				pthread_mutex_unlock(&last_original_reference.lock);
 
-			// riceve la reference (in modo non bloccante)
-			if (mq_receive(reference_qd, message,MAX_MSG_SIZE,NULL) == -1){ 
-				//printf ("No reference ...\n");							//DEBUG
+				// riceve la reference (in modo non bloccante)
+				if (mq_receive(reference_qd, message,MAX_MSG_SIZE,NULL) == -1){ 
+					//printf ("No reference ...\n");							//DEBUG
+				}
+				else{
+					//printf ("[replica] Reference received from ref_qd: %s.\n",message); //DEBUG
+					reference = atoi(message);
+					pthread_mutex_lock(&last_original_reference.lock);
+					last_original_reference.value=reference; //aggiornamento 
+					pthread_mutex_unlock(&last_original_reference.lock);
+
+				}
+
+				// calcolo della legge di controllo
+				error = reference - plant_state;
+
+				if (error > 0) control_action = 1;
+				else if (error < 0) control_action = 2;
+				else control_action = 3;
+
+				// aggiorna la control action
+				pthread_mutex_lock(&shared_control.lock);
+				shared_control.value = control_action;
+				pthread_mutex_unlock(&shared_control.lock);
 			}
-			else{
-				//printf ("Reference received: %s.\n",message);			//DEBUG
-				reference = atoi(message);
-			}
-
-			// calcolo della legge di controllo
-			error = reference - plant_state;
-
-			if (error > 0) control_action = 1;
-			else if (error < 0) control_action = 2;
-			else control_action = 3;
-
-			// aggiorna la control action
-			pthread_mutex_lock(&shared_control.lock);
-			shared_control.value = control_action;
-			pthread_mutex_unlock(&shared_control.lock);
 		
 	}
 
@@ -196,23 +206,25 @@ void * actuator_loop(void * par) {
 		
 			wait_next_activation(th);
 			// prelievo della control action
-			pthread_mutex_lock(&shared_control.lock);
-			control_action = shared_control.value;
-			pthread_mutex_unlock(&shared_control.lock);
-			
-			switch (control_action) {
-				case 1: control = 1; break;
-				case 2:	control = -1; break;
-				case 3:	control = 0; break;
-				default: control = 0;
-			}
-			printf("Control: %d\n",control); //DEBUG
-			sprintf (message, "%d", control);
-			//invio del controllo al driver del plant
-			if (mq_send (actuator_qd, message, strlen (message) + 1, 0) == -1) {
-				perror ("Sensor driver: Not able to send message to controller");
-				continue;
-			}
+			if(replica_attiva){
+				pthread_mutex_lock(&shared_control.lock);
+				control_action = shared_control.value;
+				pthread_mutex_unlock(&shared_control.lock);
+				
+				switch (control_action) {
+					case 1: control = 1; break;
+					case 2:	control = -1; break;
+					case 3:	control = 0; break;
+					default: control = 0;
+				}
+				printf("Control: %d\n",control); //DEBUG
+				sprintf (message, "%d", control);
+				//invio del controllo al driver del plant
+				if (mq_send (actuator_qd, message, strlen (message) + 1, 0) == -1) {
+					perror ("Sensor driver: Not able to send message to controller");
+					continue;
+				}
+		}
 		
 	}
 
@@ -257,12 +269,14 @@ void* watchdog(void* par){
 				replica_attiva = 1; //sono attivo
 				printf("ACTIVE\n"); 
 			} else{ //altrimenti
-				replica_attiva = 0; //non attivo, abbasso replica e memorizzo l'heartbeat che mi dice l'ultima reference
-				
+
+				replica_attiva = 0; //abbasso replica 
+
+				//memorizzo l'ultimo heartbeat
 				pthread_mutex_lock(&last_original_reference.lock);
 				last_original_reference.value = atoi(message);
 				pthread_mutex_unlock(&last_original_reference.lock);
-		
+
 				printf("NOT ACTIVE, last reference: %d\n", last_original_reference.value);
 			}
 		}

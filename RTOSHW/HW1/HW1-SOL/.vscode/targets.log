@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Sat May  7 19:18:55 2022
+# Make data base, printed on Sun May  8 09:37:16 2022
 
 # Variables
 
@@ -49,7 +49,7 @@ VTE_VERSION = 6001
 # environment
 VSCODE_NLS_CONFIG = {"locale":"it","availableLanguages":{},"_languagePackSupport":true}
 # environment
-JOURNAL_STREAM = 8:24944
+JOURNAL_STREAM = 8:26056
 # environment
 XDG_CONFIG_DIRS = /etc/xdg/xdg-ubuntu:/etc/xdg
 # environment
@@ -67,11 +67,11 @@ USERNAME = mruggi
 # environment
 XDG_DATA_DIRS = /usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop
 # environment
-DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus,guid=b196bd2e4242c868f77d4eac6276a963
+DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus,guid=161fc9968653a34f7d16c4c262777257
 # environment
 VSCODE_VERBOSE_LOGGING = true
 # environment
-MANAGERPID = 801
+MANAGERPID = 832
 # environment
 CLUTTER_IM_MODULE = ibus
 # environment
@@ -87,7 +87,7 @@ PATH = /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/
 # environment
 GPG_AGENT_INFO = /run/user/1000/gnupg/S.gpg-agent:0:1
 # environment
-SESSION_MANAGER = local/mruggi-Virtual-Machine:@/tmp/.ICE-unix/1109,unix/mruggi-Virtual-Machine:/tmp/.ICE-unix/1109
+SESSION_MANAGER = local/mruggi-Virtual-Machine:@/tmp/.ICE-unix/1145,unix/mruggi-Virtual-Machine:/tmp/.ICE-unix/1145
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
@@ -105,7 +105,7 @@ DISABLE_WAYLAND = 1
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-INVOCATION_ID = c5bab0e9d3d54d74a937998cc72fafb9
+INVOCATION_ID = 50300718899f4e5d9a5f2cb665d7576c
 # environment
 GDK_PIXBUF_MODULEDIR = /snap/code/95/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders
 # default
@@ -131,7 +131,7 @@ PWD = /home/mruggi/Scrivania/CodeSolutions/RTOSHW/HW1/HW1-SOL
 # default
 .LOADED := 
 # environment
-SSH_AGENT_PID = 988
+SSH_AGENT_PID = 1023
 # environment
 ORIGINAL_XDG_CURRENT_DESKTOP = ubuntu:GNOME
 # environment
@@ -183,7 +183,7 @@ SHLVL = 1
 # environment
 GNOME_SHELL_SESSION_MODE = ubuntu
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-08009841-22c2-42a2-82a4-57775610ed96.sock
+VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-efa583ab-bcb4-4a21-b330-ab044b335c3a.sock
 # default
 MAKE_VERSION := 4.2.1
 # environment
@@ -198,6 +198,8 @@ XDG_CURRENT_DESKTOP = Unity
 %D = $(patsubst %/,%,$(dir $%))
 # default
 MAKE_COMMAND := make
+# environment
+OLDPWD = /home/mruggi/Scrivania/CodeSolutions/RTOSHW/HW1
 # default
 .VARIABLES := 
 # automatic
@@ -233,11 +235,11 @@ DBUS_STARTER_BUS_TYPE = session
 # environment
 QT4_IM_MODULE = ibus
 # environment
-GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/7ec261dd_66d0_486e_8006_aa5d455a6a7a
+GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/20d0889a_fb91_4647_b10b_258d56067676
 # automatic
 ^F = $(notdir $^)
 # environment
-GNOME_TERMINAL_SERVICE = :1.77
+GNOME_TERMINAL_SERVICE = :1.87
 # default
 SUFFIXES := 
 # environment
@@ -255,11 +257,11 @@ LANG = C
 # environment
 TERM = xterm-256color
 # environment
-VSCODE_PID = 1530
+VSCODE_PID = 1995
 # environment
-DBUS_STARTER_ADDRESS = unix:path=/run/user/1000/bus,guid=b196bd2e4242c868f77d4eac6276a963
+DBUS_STARTER_ADDRESS = unix:path=/run/user/1000/bus,guid=161fc9968653a34f7d16c4c262777257
 # variable set hash-table stats:
-# Load=124/1024=12%, Rehash=0, Collisions=15/149=10%
+# Load=125/1024=12%, Rehash=0, Collisions=15/150=10%
 
 # Pattern-specific Variable Values
 
@@ -277,7 +279,6 @@ DBUS_STARTER_ADDRESS = unix:path=/run/user/1000/bus,guid=b196bd2e4242c868f77d4ea
 
 # Files
 
- 
 plant.o: plant.c rt-lib.h parameters.h
 #  Implicit rule search has not been done.
 #  Last modified 2022-05-07 16:58:57.444098667
@@ -296,7 +297,7 @@ plant: plant.o rt-lib.o
 
 controller.o: controller.c rt-lib.h parameters.h
 #  Implicit rule search has not been done.
-#  Last modified 2022-05-07 18:36:02.087331481
+#  Last modified 2022-05-07 19:34:19.573141981
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 22):
@@ -304,7 +305,7 @@ controller.o: controller.c rt-lib.h parameters.h
 
 controller: controller.o rt-lib.o
 #  Implicit rule search has not been done.
-#  Last modified 2022-05-07 18:36:02.175327629
+#  Last modified 2022-05-07 19:34:19.649137111
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 10):
@@ -328,7 +329,7 @@ all: plant controller reference replica
 # Not a target:
 replica.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-05-07 19:09:23.633157907
+#  Last modified 2022-05-07 20:45:41.579297465
 #  File has been updated.
 #  Successfully updated.
 
@@ -364,7 +365,7 @@ plant.c:
 # Not a target:
 controller.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-05-07 18:35:02.961930376
+#  Last modified 2022-05-07 19:32:28.978683281
 #  File has been updated.
 #  Successfully updated.
 
@@ -397,7 +398,7 @@ clean:
 
 replica: replica.o rt-lib.o
 #  Implicit rule search has not been done.
-#  Last modified 2022-05-07 19:09:26.549042261
+#  Last modified 2022-05-08 09:36:14.114244389
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 4):
@@ -405,7 +406,7 @@ replica: replica.o rt-lib.o
 
 replica.o: replica.c rt-lib.h parameters.h
 #  Implicit rule search has not been done.
-#  Last modified 2022-05-07 19:09:26.489044641
+#  Last modified 2022-05-08 09:36:13.406321964
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 16):
@@ -432,6 +433,6 @@ rt-lib.h:
 # strcache performance: lookups = 71 / hit rate = 64%
 # hash-table stats:
 # Load=25/8192=0%, Rehash=0, Collisions=1/71=1%
-# Finished Make data base on Sat May  7 19:18:55 2022
+# Finished Make data base on Sun May  8 09:37:16 2022
 
  

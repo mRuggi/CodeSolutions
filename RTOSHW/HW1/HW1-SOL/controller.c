@@ -143,7 +143,7 @@ void * control_loop(void * par) {
 			//printf ("No reference ...\n");							//DEBUG
 		}
 		else{
-			//printf ("Reference received: %s.\n",message);			//DEBUG
+			//printf ("[controller] Reference received: %s.\n",message);			//DEBUG
 			reference = atoi(message);
 		}
 
@@ -292,15 +292,7 @@ int main(void)
   	}
 	keep_on_running = 0;
 
-	if (mq_unlink (WDOG_QUEUE_NAME) == -1) {
-        perror ("Main replica: mq_unlink wdog queue");
-        exit (1);
-    }
-
-	if (mq_unlink (REFERENCE_QUEUE_NAME) == -1) {
-        perror ("Main replica: mq_unlink reference queue");
-        exit (1);
-    }
+	//sarà la replica a unlinkare le code
 
  	printf("The controller is STOPPED\n");
 	return 0;
