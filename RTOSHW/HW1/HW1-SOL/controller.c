@@ -1,5 +1,5 @@
 //------------------- CONTROLLER.C ---------------------- 
-
+#define _POSIX_C_SOURCE 202209L
 #include <time.h>
 #include <pthread.h>
 #include <signal.h>
@@ -22,6 +22,7 @@ struct shared_int {
 };
 static struct shared_int shared_avg_sensor;
 static struct shared_int shared_control;
+static struct shared_int shared_reference;
 
 int buffer[BUF_SIZE];
 int head = 0;
@@ -122,6 +123,10 @@ void * control_loop(void * par) {
 		}	
 
 	unsigned int reference = 110;
+	pthread_mutex_lock(&shared_reference.lock);
+	shared_reference.value=110;
+	pthread_mutex_unlock(&shared_reference.lock);
+
 	unsigned int plant_state = 0;
 	int error = 0;
 	unsigned int control_action = 0;
@@ -145,6 +150,10 @@ void * control_loop(void * par) {
 		else{
 			//printf ("[controller] Reference received: %s.\n",message);			//DEBUG
 			reference = atoi(message);
+			//aggiornamento della variabile globale condivisa
+			pthread_mutex_lock(&shared_reference.lock);
+			shared_reference.value=reference;
+			pthread_mutex_unlock(&shared_reference.lock);
 		}
 
 		// calcolo della legge di controllo
@@ -242,8 +251,106 @@ void * actuator_loop(void * par) {
 void * deferrable_server(void* par){
 
 
+	periodic_thread *th = (periodic_thread *) par;
+	start_periodic_timer(th,TICK_TIME);
 
+	struct timespec timeout; //variabile usata per la timed receive
 
+	// Messaggio e variabili pivot per quando devo rispondere
+	char message [MAX_MSG_SIZE];
+	int avg;
+	int control;
+	int reference; //nella traccia non è una variabile shared quindi devo trasformarla in tale
+	int b[BUF_SIZE];
+	
+	/* Code */
+	struct mq_attr attr;
+
+	attr.mq_flags = 0;				
+	attr.mq_maxmsg = MAX_MESSAGES;	
+	attr.mq_msgsize = MAX_MSG_SIZE; 
+	attr.mq_curmsgs = 0;
+
+	//la coda delle richieste non deve essere O_NONBLOCK e dovrò ricevere le richieste con una timedreceive
+	mqd_t req_qd;
+    if ((req_qd=mq_open(REQDS_QUEUE_NAME,O_RDONLY|O_CREAT, QUEUE_PERMISSIONS,&attr))==-1) { //ci leggo la richiesta
+        perror("DS mqopen reference_qd");
+		exit (1);
+    }
+
+	//coda su cui rispondo
+    mqd_t res_qd;
+    if ((res_qd=mq_open(ANSWRDS_QUEUE_NAME,O_WRONLY|O_CREAT, QUEUE_PERMISSIONS,&attr))==-1) { //ci scrivo la risposta
+        perror("DS mqopen reference_qd");
+        exit (1);
+    }
+
+	while(keep_on_running){
+		wait_next_activation(th);
+
+		//timeout set per il tempo massimo che dovrò aspettare la richiesta
+		clock_gettime(CLOCK_REALTIME,&timeout);
+		timespec_add_us(&timeout,TICK_TIME/2);
+
+		if(mq_timedreceive(req_qd,message,MAX_MSG_SIZE,NULL,&timeout)==-1){ //ricezione entro il periodo
+		//se non ho ricevuto non faccio nulla
+		}else{ //altrimenti mando la risposta 
+
+			pthread_mutex_lock(&shared_avg_sensor.lock);
+			avg = shared_avg_sensor.value;
+			pthread_mutex_unlock(&shared_avg_sensor.lock);
+
+			pthread_mutex_lock(&shared_control.lock);
+			control = shared_control.value;
+			pthread_mutex_unlock(&shared_control.lock);
+
+			pthread_mutex_lock(&shared_reference.lock);
+			reference= shared_reference.value;
+			pthread_mutex_unlock(&shared_reference.lock);
+
+			for(int i=0; i<BUF_SIZE; i++){
+				b[i]=buffer[i];
+			}
+
+			//faccio piu send altrimenti non ce la faccio con lo spazio
+			sprintf(message,"AVG: %d ",avg);
+			if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
+				perror ("DS: Not able to send message to diag");
+				continue;
+			}
+			sprintf(message,"CTRL: %d ",control);
+			if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
+				perror ("DS: Not able to send message to diag");
+				continue;
+			}
+			sprintf(message,"REF: %d ",reference);
+			if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
+				perror ("DS: Not able to send message to diag");
+				continue;
+			}
+			sprintf(message,"B:[%d,%d,",b[0],b[1]);
+			if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
+				perror ("DS: Not able to send message to diag");
+				continue;
+			}
+			sprintf(message,"%d,%d,%d]",b[2],b[3],b[4]);
+			if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
+				perror ("DS: Not able to send message to diag");
+				continue;
+			}
+		}
+	}
+
+	/*Clear*/
+	if (mq_close(res_qd) == -1) {
+    perror ("DS loop: mq_close res_qd");
+    exit (1);
+	}
+
+	if (mq_close(req_qd) == -1) {
+    perror ("DS loop: mq_close res_qd");
+    exit (1);
+	}
 }
 
 int main(void)
@@ -310,12 +417,18 @@ int main(void)
   	}
 	keep_on_running = 0;
 
-	//sarà la replica a unlinkare le code
+	//sarà la replica a unlinkare le code reference e wdog, il plant a unlinkare actuator e sensor
+	//il controller unlinka le code del ds
+	if (mq_unlink (REQDS_QUEUE_NAME) == -1) {
+        perror ("Main controller: mq_unlink reqds queue");
+        exit (1);
+    }
+
+	if (mq_unlink (ANSWRDS_QUEUE_NAME) == -1) {
+        perror ("Main controller: mq_unlink resds queue");
+        exit (1);
+    }
 
  	printf("The controller is STOPPED\n");
 	return 0;
 }
-
-
-
-

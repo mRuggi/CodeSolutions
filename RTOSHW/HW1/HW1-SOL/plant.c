@@ -226,7 +226,7 @@ int main(void)
     }
 
 	if (mq_unlink (ACTUATOR_QUEUE_NAME) == -1) {
-        perror ("Mainr: mq_unlink actuator queue");
+        perror ("Main: mq_unlink actuator queue");
         exit (1);
     }
 

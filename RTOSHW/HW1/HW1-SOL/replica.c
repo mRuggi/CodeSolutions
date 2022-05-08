@@ -1,5 +1,5 @@
 //------------------- REPLICA.C ---------------------- 
-
+#define _POSIX_C_SOURCE 202209L //basta che sia maggiore di 200809L perche uso CLOCK_REALTIME
 #include <time.h>
 #include <pthread.h>
 #include <signal.h>
@@ -262,6 +262,7 @@ void* watchdog(void* par){
 		while(keep_on_running){
 
 			wait_next_activation(th);
+
 			clock_gettime(CLOCK_REALTIME,&timeout);
 			timespec_add_us(&timeout,TICK_TIME*BUF_SIZE*2);
 
@@ -280,12 +281,12 @@ void* watchdog(void* par){
 				printf("NOT ACTIVE, last reference: %d\n", last_original_reference.value);
 			}
 		}
-
+		
+		/*Clear*/
 		if (mq_close (wd_qd) == -1) {
         perror ("Watchdog loop: mq_close wd_qd");
         exit (1);
-    }
-
+    	}
 }
 
 int main(void)
@@ -347,7 +348,6 @@ int main(void)
 
 	//distruzione attributo
 	pthread_attr_destroy(&myattr);
-	
 	
 	/* Wait user exit commands*/
 	while (1) {

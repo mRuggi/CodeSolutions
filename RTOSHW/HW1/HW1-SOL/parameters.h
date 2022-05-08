@@ -9,3 +9,9 @@
 #define MAX_MESSAGES 1000
 #define MAX_MSG_SIZE 16
 #define BUF_SIZE 5
+#define DIAGREQPRIO 0 //low
+#define DIAGREQ "diag"
+#define DIAGREQSIZE 5
+#define WCETREQPRIO 1 //basta che sia maggiore di DIAGREQPRIO
+#define WCETREQ "wcet"
+#define WCETREQSIZE 5
