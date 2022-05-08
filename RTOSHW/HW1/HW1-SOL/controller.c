@@ -239,6 +239,13 @@ void * actuator_loop(void * par) {
 	return 0;
 }
 
+void * deferrable_server(void* par){
+
+
+
+
+}
+
 int main(void)
 {
 	printf("The controller is STARTED! [press 'q' to stop]\n");
@@ -246,6 +253,7 @@ int main(void)
 	pthread_t acquire_filter_thread;
     pthread_t control_thread;
     pthread_t actuator_thread;
+	pthread_t DS_thread;
 
 	pthread_mutex_init(&shared_avg_sensor.lock, NULL);
 	pthread_mutex_init(&shared_control.lock, NULL);
@@ -257,6 +265,16 @@ int main(void)
 	pthread_attr_setschedpolicy(&myattr, SCHED_FIFO);
 	pthread_attr_setinheritsched(&myattr, PTHREAD_EXPLICIT_SCHED); 
 
+	//DEFERRABLE SERVER THREAD
+
+	periodic_thread DS_th;
+	DS_th.period = TICK_TIME/2;
+	DS_th.priority = 55;
+
+	myparam.sched_priority = DS_th.priority;
+	pthread_attr_setschedparam(&myattr, &myparam); 
+	pthread_create(&DS_thread,&myattr,deferrable_server,(void*)&DS_th);
+	
 	// ACQUIRE FILTER THREAD
 	periodic_thread acquire_filter_th;
 	acquire_filter_th.period = TICK_TIME;
