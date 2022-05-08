@@ -1,7 +1,5 @@
 make --dry-run --keep-going --print-directory
 make: Entering directory '/home/mruggi/Scrivania/CodeSolutions/RTOSHW/HW1/HW1-SOL'
- 
 make: Nothing to be done for 'all'.
- 
 make: Leaving directory '/home/mruggi/Scrivania/CodeSolutions/RTOSHW/HW1/HW1-SOL'
  

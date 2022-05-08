@@ -20,9 +20,19 @@ struct shared_int {
 	int value;
 	pthread_mutex_t lock;
 };
+
+struct shared_double {
+	double value;
+	pthread_mutex_t lock;
+};
+
 static struct shared_int shared_avg_sensor;
 static struct shared_int shared_control;
 static struct shared_int shared_reference;
+
+static struct shared_double acquirefilter_wcet;
+static struct shared_double control_wcet;
+static struct shared_double actuator_wcet;
 
 int buffer[BUF_SIZE];
 int head = 0;
@@ -32,6 +42,8 @@ void * acquire_filter_loop(void * par) {
 	
 	periodic_thread *th = (periodic_thread *) par;
 	start_periodic_timer(th,TICK_TIME);
+
+	struct timespec start, end; //variabili per calcolo wcet
 
 	// Messaggio da prelevare dal driver
 	char message [MAX_MSG_SIZE];
@@ -56,6 +68,8 @@ void * acquire_filter_loop(void * par) {
 	{
 		wait_next_activation(th);
 
+		clock_gettime(CLOCK_REALTIME,&start); //inizio a contare
+
 		// PRELIEVO DATI dalla coda del PLANT
 		if (mq_receive(sensor_qd, message,MAX_MSG_SIZE,NULL) == -1){
 			perror ("acquire filter loop: mq_receive (actuator)");	
@@ -79,6 +93,12 @@ void * acquire_filter_loop(void * par) {
 				sum = 0;
 			}	
 		}
+
+		clock_gettime(CLOCK_REALTIME,&end); //finisco di contare
+		//aggiorno la variabile globale
+		pthread_mutex_lock(&acquirefilter_wcet.lock);
+		acquirefilter_wcet.value = difference_ns(&end,&start) / 1000000000.0;
+		pthread_mutex_unlock(&acquirefilter_wcet.lock);
 	}		
 
 	/* Clear */
@@ -95,6 +115,8 @@ void * control_loop(void * par) {
 
 	periodic_thread *th = (periodic_thread *) par;
 	start_periodic_timer(th,TICK_TIME);
+
+	struct timespec start, end; //variabili per calcolo wcet
 	
 	// Messaggio da prelevare dal reference (coincide col messaggio che dovrò inviare come hearthbeat)
 	char message [MAX_MSG_SIZE];
@@ -136,6 +158,8 @@ void * control_loop(void * par) {
 	while (keep_on_running)
 	{
 		wait_next_activation(th);
+
+		clock_gettime(CLOCK_REALTIME,&start); //inizio a contare
 		nciclo++;
 
 		// legge il plant state 
@@ -177,6 +201,13 @@ void * control_loop(void * par) {
         		exit (1);
 			}
 		}
+
+		clock_gettime(CLOCK_REALTIME,&end); //finisco di contare
+		//aggiorno la variabile globale
+		pthread_mutex_lock(&control_wcet.lock);
+		control_wcet.value = difference_ns(&end,&start) / 1000000000.0;
+		pthread_mutex_unlock(&control_wcet.lock);
+
 	}
 
 	/* Clear */
@@ -197,6 +228,8 @@ void * actuator_loop(void * par) {
 
 	periodic_thread *th = (periodic_thread *) par;
 	start_periodic_timer(th,TICK_TIME);
+
+	struct timespec start, end; //variabili per calcolo wcet
 
 	// Messaggio da prelevare dal driver
 	char message [MAX_MSG_SIZE];
@@ -221,6 +254,9 @@ void * actuator_loop(void * par) {
 	while (keep_on_running)
 	{
 		wait_next_activation(th);
+
+		clock_gettime(CLOCK_REALTIME,&start); //inizio a contare
+
 		// prelievo della control action
 		pthread_mutex_lock(&shared_control.lock);
 		control_action = shared_control.value;
@@ -239,6 +275,13 @@ void * actuator_loop(void * par) {
 		    perror ("Sensor driver: Not able to send message to controller");
 		    continue;
 		}
+
+		clock_gettime(CLOCK_REALTIME,&end); //finisco di contare
+		//aggiorno la variabile globale
+		pthread_mutex_lock(&actuator_wcet.lock);
+		actuator_wcet.value = difference_ns(&end,&start) / 1000000000.0;
+		pthread_mutex_unlock(&actuator_wcet.lock);
+
 	}
 	/* Clear */
     if (mq_close (actuator_qd) == -1) {
@@ -249,7 +292,6 @@ void * actuator_loop(void * par) {
 }
 
 void * deferrable_server(void* par){
-
 
 	periodic_thread *th = (periodic_thread *) par;
 	start_periodic_timer(th,TICK_TIME);
@@ -262,6 +304,9 @@ void * deferrable_server(void* par){
 	int control;
 	int reference; //nella traccia non è una variabile shared quindi devo trasformarla in tale
 	int b[BUF_SIZE];
+	double wcet1;
+	double wcet2;
+	double wcet3;
 	
 	/* Code */
 	struct mq_attr attr;
@@ -295,51 +340,85 @@ void * deferrable_server(void* par){
 		if(mq_timedreceive(req_qd,message,MAX_MSG_SIZE,NULL,&timeout)==-1){ //ricezione entro il periodo
 		//se non ho ricevuto non faccio nulla
 		}else{ //altrimenti mando la risposta 
+			if(!strcmp(message,DIAGREQ)){ //se ho ricevuto una diagreq
+				pthread_mutex_lock(&shared_avg_sensor.lock);
+				avg = shared_avg_sensor.value;
+				pthread_mutex_unlock(&shared_avg_sensor.lock);
 
-			pthread_mutex_lock(&shared_avg_sensor.lock);
-			avg = shared_avg_sensor.value;
-			pthread_mutex_unlock(&shared_avg_sensor.lock);
+				pthread_mutex_lock(&shared_control.lock);
+				control = shared_control.value;
+				pthread_mutex_unlock(&shared_control.lock);
 
-			pthread_mutex_lock(&shared_control.lock);
-			control = shared_control.value;
-			pthread_mutex_unlock(&shared_control.lock);
+				pthread_mutex_lock(&shared_reference.lock);
+				reference= shared_reference.value;
+				pthread_mutex_unlock(&shared_reference.lock);
 
-			pthread_mutex_lock(&shared_reference.lock);
-			reference= shared_reference.value;
-			pthread_mutex_unlock(&shared_reference.lock);
+				for(int i=0; i<BUF_SIZE; i++){
+					b[i]=buffer[i];
+				}
 
-			for(int i=0; i<BUF_SIZE; i++){
-				b[i]=buffer[i];
-			}
+				//faccio piu send altrimenti non ce la faccio con lo spazio
+				sprintf(message,"AVG: %d ",avg);
+				if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
+					perror ("DS: Not able to send message to diag");
+					continue;
+				}
+				sprintf(message,"CTRL: %d ",control);
+				if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
+					perror ("DS: Not able to send message to diag");
+					continue;
+				}
+				sprintf(message,"REF: %d ",reference);
+				if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
+					perror ("DS: Not able to send message to diag");
+					continue;
+				}
+				sprintf(message,"B:[%d,%d,",b[0],b[1]);
+				if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
+					perror ("DS: Not able to send message to diag");
+					continue;
+				}
+				sprintf(message,"%d,%d,%d]",b[2],b[3],b[4]);
+				if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
+					perror ("DS: Not able to send message to diag");
+					continue;
+				}
+			}else{//se ho ricevuto una wcetdiagreq
+			
+				pthread_mutex_lock(&acquirefilter_wcet.lock);
+				wcet1 = acquirefilter_wcet.value;
+				pthread_mutex_unlock(&acquirefilter_wcet.lock);
 
-			//faccio piu send altrimenti non ce la faccio con lo spazio
-			sprintf(message,"AVG: %d ",avg);
-			if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
-				perror ("DS: Not able to send message to diag");
-				continue;
-			}
-			sprintf(message,"CTRL: %d ",control);
-			if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
-				perror ("DS: Not able to send message to diag");
-				continue;
-			}
-			sprintf(message,"REF: %d ",reference);
-			if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
-				perror ("DS: Not able to send message to diag");
-				continue;
-			}
-			sprintf(message,"B:[%d,%d,",b[0],b[1]);
-			if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
-				perror ("DS: Not able to send message to diag");
-				continue;
-			}
-			sprintf(message,"%d,%d,%d]",b[2],b[3],b[4]);
-			if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
-				perror ("DS: Not able to send message to diag");
-				continue;
+				pthread_mutex_lock(&control_wcet.lock);
+				wcet2 = control_wcet.value;
+				pthread_mutex_unlock(&control_wcet.lock);
+
+				pthread_mutex_lock(&actuator_wcet.lock);
+				wcet3 = actuator_wcet.value;
+				pthread_mutex_unlock(&actuator_wcet.lock);
+
+				sprintf(message,"%f-",wcet1);
+				if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
+						perror ("DS: Not able to send message to WCETdiag");
+						continue;
+				}
+
+				sprintf(message,"%f-",wcet2);
+				if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
+						perror ("DS: Not able to send message to WCETdiag");
+						continue;
+				}
+
+				sprintf(message,"%f",wcet3);
+				if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
+						perror ("DS: Not able to send message to WCETdiag");
+						continue;
+				}
+
 			}
 		}
 	}
+	
 
 	/*Clear*/
 	if (mq_close(res_qd) == -1) {

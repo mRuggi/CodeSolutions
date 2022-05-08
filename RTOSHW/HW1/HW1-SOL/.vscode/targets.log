@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Sun May  8 17:06:58 2022
+# Make data base, printed on Sun May  8 20:19:48 2022
 
 # Variables
 
@@ -30,6 +30,8 @@ XDG_SESSION_TYPE = x11
 VSCODE_LOG_NATIVE = false
 # automatic
 ?D = $(patsubst %/,%,$(dir $?))
+# environment
+G_ENABLE_DIAGNOSTIC = 0
 # automatic
 @D = $(patsubst %/,%,$(dir $@))
 # environment
@@ -49,7 +51,7 @@ VTE_VERSION = 6001
 # environment
 VSCODE_NLS_CONFIG = {"locale":"it","availableLanguages":{},"_languagePackSupport":true}
 # environment
-JOURNAL_STREAM = 8:25706
+JOURNAL_STREAM = 8:46417
 # environment
 XDG_CONFIG_DIRS = /etc/xdg/xdg-ubuntu:/etc/xdg
 # environment
@@ -63,12 +65,11 @@ MAKEFILE_LIST :=  Makefile
 # environment
 IM_CONFIG_PHASE = 1
 # environment
- 
 USERNAME = mruggi
 # environment
 XDG_DATA_DIRS = /usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop
 # environment
-DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus,guid=b36fc0010eef3fce9c87397d6277d0bf
+DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
 # environment
 VSCODE_VERBOSE_LOGGING = true
 # environment
@@ -106,7 +107,7 @@ DISABLE_WAYLAND = 1
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-INVOCATION_ID = 6a18f51756924b1198cff2941b5cf344
+INVOCATION_ID = 0f0d709154d04e1484cb86e50d677bb9
 # environment
 GDK_PIXBUF_MODULEDIR = /snap/code/95/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders
 # default
@@ -184,7 +185,7 @@ SHLVL = 1
 # environment
 GNOME_SHELL_SESSION_MODE = ubuntu
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-2bb2a665-dafc-47f3-815c-b0df3b6eec0d.sock
+VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-cd32f1dc-fae7-44b7-8400-b489c19ca02e.sock
 # default
 MAKE_VERSION := 4.2.1
 # environment
@@ -199,6 +200,8 @@ XDG_CURRENT_DESKTOP = Unity
 %D = $(patsubst %/,%,$(dir $%))
 # default
 MAKE_COMMAND := make
+# environment
+OLDPWD = /home/mruggi/Scrivania/CodeSolutions/RTOSHW/HW1
 # default
 .VARIABLES := 
 # automatic
@@ -230,11 +233,9 @@ SNAP_NAME = code
 # environment
 LC_ALL = C
 # environment
-DBUS_STARTER_BUS_TYPE = session
-# environment
 QT4_IM_MODULE = ibus
 # environment
-GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/a96494a0_71f4_4199_933e_2ac4ef41e8d8
+GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/96157f0d_d89a_4937_848c_78a944094e9f
 # automatic
 ^F = $(notdir $^)
 # environment
@@ -256,9 +257,7 @@ LANG = C
 # environment
 TERM = xterm-256color
 # environment
-VSCODE_PID = 1940
-# environment
-DBUS_STARTER_ADDRESS = unix:path=/run/user/1000/bus,guid=b36fc0010eef3fce9c87397d6277d0bf
+VSCODE_PID = 7122
 # variable set hash-table stats:
 # Load=124/1024=12%, Rehash=0, Collisions=15/149=10%
 
@@ -268,9 +267,9 @@ DBUS_STARTER_ADDRESS = unix:path=/run/user/1000/bus,guid=b36fc0010eef3fce9c87397
 
 # Directories
 
-# . (device 2049, inode 1120580): 21 files, no impossibilities.
+# . (device 2049, inode 1120580): 23 files, no impossibilities.
 
-# 21 files, no impossibilities in 1 directories.
+# 23 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -278,17 +277,18 @@ DBUS_STARTER_ADDRESS = unix:path=/run/user/1000/bus,guid=b36fc0010eef3fce9c87397
 
 # Files
 
+ 
 plant.o: plant.c rt-lib.h parameters.h
 #  Implicit rule search has not been done.
-#  Last modified 2022-05-08 17:06:25.470354782
+#  Last modified 2022-05-08 19:25:15.926697801
 #  File has been updated.
 #  Successfully updated.
-#  recipe to execute (from 'Makefile', line 22):
+#  recipe to execute (from 'Makefile', line 25):
 	gcc -c plant.c
 
 plant: plant.o rt-lib.o
 #  Implicit rule search has not been done.
-#  Last modified 2022-05-08 17:06:25.546349811
+#  Last modified 2022-05-08 19:25:15.98269586
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 7):
@@ -296,15 +296,15 @@ plant: plant.o rt-lib.o
 
 controller.o: controller.c rt-lib.h parameters.h
 #  Implicit rule search has not been done.
-#  Last modified 2022-05-08 17:06:25.642343532
+#  Last modified 2022-05-08 20:19:19.189674929
 #  File has been updated.
 #  Successfully updated.
-#  recipe to execute (from 'Makefile', line 25):
+#  recipe to execute (from 'Makefile', line 28):
 	gcc -c controller.c
 
 controller: controller.o rt-lib.o
 #  Implicit rule search has not been done.
-#  Last modified 2022-05-08 17:06:25.694340131
+#  Last modified 2022-05-08 20:19:19.285671115
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 10):
@@ -312,13 +312,13 @@ controller: controller.o rt-lib.o
 
 reference: reference.c parameters.h
 #  Implicit rule search has not been done.
-#  Last modified 2022-05-08 17:06:25.778334637
+#  Last modified 2022-05-08 19:25:16.418680747
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 13):
 	gcc -o reference reference.c -lrt
 
-all: plant controller reference replica diag
+all: plant controller reference replica diag diagWCET
 #  Command line target.
 #  Implicit rule search has been done.
 #  File does not exist.
@@ -328,44 +328,51 @@ all: plant controller reference replica diag
 # Not a target:
 replica.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-05-08 17:05:37.781595207
+#  Last modified 2022-05-08 17:38:37.816021462
 #  File has been updated.
 #  Successfully updated.
+
+diagWCET: diagWCET.c parameters.h
+#  Implicit rule search has not been done.
+#  Last modified 2022-05-08 20:19:19.417665872
+#  File has been updated.
+#  Successfully updated.
+#  recipe to execute (from 'Makefile', line 19):
+	gcc -o diagWCET diagWCET.c -lrt
 
 # Not a target:
 Makefile:
 #  Implicit rule search has been done.
-#  Last modified 2022-05-08 17:06:21.246631974
+#  Last modified 2022-05-08 20:19:13.677893928
 #  File has been updated.
 #  Successfully updated.
 
 rt-lib.o: rt-lib.c rt-lib.h
 #  Implicit rule search has not been done.
- 
-#  Last modified 2022-05-07 16:58:57.512096149
+#  Last modified 2022-05-08 17:24:40.967046433
 #  File has been updated.
 #  Successfully updated.
-#  recipe to execute (from 'Makefile', line 28):
+#  recipe to execute (from 'Makefile', line 31):
 	gcc -c rt-lib.c
 
 # Not a target:
 parameters.h:
 #  Implicit rule search has been done.
-#  Last modified 2022-05-08 16:50:31.247157481
+#  Last modified 2022-05-08 19:24:24.94447213
 #  File has been updated.
 #  Successfully updated.
 
 # Not a target:
 plant.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-05-07 15:47:47.162038452
+#  Last modified 2022-05-08 17:34:06.120647373
 #  File has been updated.
 #  Successfully updated.
 
 # Not a target:
 controller.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-05-08 17:05:36.293700453
+#  Last modified 2022-05-08 20:17:58.316897138
 #  File has been updated.
 #  Successfully updated.
 
@@ -378,11 +385,18 @@ reference.c:
 
 diag: diag.c parameters.h
 #  Implicit rule search has not been done.
-#  Last modified 2022-05-08 17:06:26.054316589
+#  Last modified 2022-05-08 19:25:16.846665911
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 16):
 	gcc -o diag diag.c -lrt
+
+# Not a target:
+diagWCET.c:
+#  Implicit rule search has been done.
+#  Last modified 2022-05-08 20:18:27.5157315
+#  File has been updated.
+#  Successfully updated.
 
 # Not a target:
 .DEFAULT:
@@ -393,7 +407,7 @@ diag: diag.c parameters.h
 # Not a target:
 rt-lib.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-05-07 15:47:47.162038452
+#  Last modified 2022-05-08 17:24:30.236024202
 #  File has been updated.
 #  Successfully updated.
 
@@ -401,12 +415,12 @@ clean:
 #  Implicit rule search has not been done.
 #  Modification time never checked.
 #  File has not been updated.
-#  recipe to execute (from 'Makefile', line 31):
+#  recipe to execute (from 'Makefile', line 34):
 	rm *.o plant controller reference replica
 
 replica: replica.o rt-lib.o
 #  Implicit rule search has not been done.
-#  Last modified 2022-05-08 17:06:25.934324433
+#  Last modified 2022-05-08 19:25:16.638673121
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 4):
@@ -414,16 +428,16 @@ replica: replica.o rt-lib.o
 
 replica.o: replica.c rt-lib.h parameters.h
 #  Implicit rule search has not been done.
-#  Last modified 2022-05-08 17:06:25.878328096
+#  Last modified 2022-05-08 19:25:16.51867728
 #  File has been updated.
 #  Successfully updated.
-#  recipe to execute (from 'Makefile', line 19):
+#  recipe to execute (from 'Makefile', line 22):
 	gcc -c replica.c
 
 # Not a target:
 diag.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-05-08 16:57:40.171088615
+#  Last modified 2022-05-08 17:57:31.454693527
 #  File has been updated.
 #  Successfully updated.
 
@@ -435,19 +449,19 @@ rt-lib.h:
 #  Successfully updated.
 
 # files hash-table stats:
-# Load=22/1024=2%, Rehash=0, Collisions=1/68=1%
+# Load=24/1024=2%, Rehash=0, Collisions=1/74=1%
 # VPATH Search Paths
 
 # No 'vpath' search paths.
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 27 / storage = 244 B / avg = 9 B
-# current buf: size = 8162 B / used = 244 B / count = 27 / avg = 9 B
+# strcache buffers: 1 (0) / strings = 29 / storage = 264 B / avg = 9 B
+# current buf: size = 8162 B / used = 264 B / count = 29 / avg = 9 B
 
-# strcache performance: lookups = 78 / hit rate = 65%
+# strcache performance: lookups = 85 / hit rate = 65%
 # hash-table stats:
-# Load=27/8192=0%, Rehash=0, Collisions=1/78=1%
-# Finished Make data base on Sun May  8 17:06:58 2022
+# Load=29/8192=0%, Rehash=0, Collisions=1/85=1%
+# Finished Make data base on Sun May  8 20:19:48 2022
 
  

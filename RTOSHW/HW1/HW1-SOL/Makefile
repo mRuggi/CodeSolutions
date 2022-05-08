@@ -1,4 +1,4 @@
-all: plant controller reference replica diag
+all: plant controller reference replica diag diagWCET
 
 replica: replica.o rt-lib.o
 	gcc -o replica replica.o rt-lib.o -lrt -pthread
@@ -14,6 +14,9 @@ reference: reference.c parameters.h
 
 diag: diag.c parameters.h
 	gcc -o diag diag.c -lrt
+
+diagWCET: diagWCET.c parameters.h
+	gcc -o diagWCET diagWCET.c -lrt
 
 replica.o: replica.c rt-lib.h parameters.h
 	gcc -c replica.c
