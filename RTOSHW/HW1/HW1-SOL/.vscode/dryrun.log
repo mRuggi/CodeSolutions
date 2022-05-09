@@ -1,5 +1,14 @@
-make --dry-run --keep-going --print-directory
+make --dry-run --always-make --keep-going --print-directory
 make: Entering directory '/home/mruggi/Scrivania/CodeSolutions/RTOSHW/HW1/HW1-SOL'
-make: Nothing to be done for 'all'.
+gcc -c plant.c
+gcc -c rt-lib.c
+gcc -o plant plant.o rt-lib.o -lrt -pthread
+gcc -c controller.c
+gcc -o controller controller.o rt-lib.o -lrt -pthread
+gcc -o reference reference.c -lrt
+gcc -c replica.c
+gcc -o replica replica.o rt-lib.o -lrt -pthread
+gcc -o diag diag.c -lrt
+gcc -o diagWCET diagWCET.c -lrt
 make: Leaving directory '/home/mruggi/Scrivania/CodeSolutions/RTOSHW/HW1/HW1-SOL'
  

@@ -21,18 +21,13 @@ struct shared_int {
 	pthread_mutex_t lock;
 };
 
-struct shared_double {
-	double value;
-	pthread_mutex_t lock;
-};
-
 static struct shared_int shared_avg_sensor;
 static struct shared_int shared_control;
 static struct shared_int shared_reference;
 
-static struct shared_double acquirefilter_wcet;
-static struct shared_double control_wcet;
-static struct shared_double actuator_wcet;
+static struct shared_int acquirefilter_wcet;
+static struct shared_int control_wcet;
+static struct shared_int actuator_wcet;
 
 int buffer[BUF_SIZE];
 int head = 0;
@@ -68,7 +63,7 @@ void * acquire_filter_loop(void * par) {
 	{
 		wait_next_activation(th);
 
-		clock_gettime(CLOCK_REALTIME,&start); //inizio a contare
+		clock_gettime(CLOCK_THREAD_CPUTIME_ID,&start); //inizio a contare
 
 		// PRELIEVO DATI dalla coda del PLANT
 		if (mq_receive(sensor_qd, message,MAX_MSG_SIZE,NULL) == -1){
@@ -94,11 +89,14 @@ void * acquire_filter_loop(void * par) {
 			}	
 		}
 
-		clock_gettime(CLOCK_REALTIME,&end); //finisco di contare
-		//aggiorno la variabile globale
-		pthread_mutex_lock(&acquirefilter_wcet.lock);
-		acquirefilter_wcet.value = difference_ns(&end,&start) / 1000000000.0;
-		pthread_mutex_unlock(&acquirefilter_wcet.lock);
+		clock_gettime(CLOCK_THREAD_CPUTIME_ID,&end); //finisco di contare
+		//aggiorno la variabile globale solo se difference_ns è maggiore di th->wcet;
+		if((difference_ns(&end,&start)/1000)>(th->wcet)){
+			th->wcet=difference_ns(&end,&start)/1000;
+			pthread_mutex_lock(&acquirefilter_wcet.lock);
+			acquirefilter_wcet.value = difference_ns(&end,&start) / 1000; 
+			pthread_mutex_unlock(&acquirefilter_wcet.lock);
+		}
 	}		
 
 	/* Clear */
@@ -159,7 +157,7 @@ void * control_loop(void * par) {
 	{
 		wait_next_activation(th);
 
-		clock_gettime(CLOCK_REALTIME,&start); //inizio a contare
+		clock_gettime(CLOCK_THREAD_CPUTIME_ID,&start); //inizio a contare
 		nciclo++;
 
 		// legge il plant state 
@@ -202,12 +200,14 @@ void * control_loop(void * par) {
 			}
 		}
 
-		clock_gettime(CLOCK_REALTIME,&end); //finisco di contare
+		clock_gettime(CLOCK_THREAD_CPUTIME_ID,&end); //finisco di contare
 		//aggiorno la variabile globale
-		pthread_mutex_lock(&control_wcet.lock);
-		control_wcet.value = difference_ns(&end,&start) / 1000000000.0;
-		pthread_mutex_unlock(&control_wcet.lock);
-
+		if((difference_ns(&end,&start)/1000)>(th->wcet)){
+			th->wcet=difference_ns(&end,&start)/1000;
+			pthread_mutex_lock(&control_wcet.lock);
+			control_wcet.value = difference_ns(&end,&start) / 1000;
+			pthread_mutex_unlock(&control_wcet.lock);
+		}
 	}
 
 	/* Clear */
@@ -255,7 +255,7 @@ void * actuator_loop(void * par) {
 	{
 		wait_next_activation(th);
 
-		clock_gettime(CLOCK_REALTIME,&start); //inizio a contare
+		clock_gettime(CLOCK_THREAD_CPUTIME_ID,&start); //inizio a contare
 
 		// prelievo della control action
 		pthread_mutex_lock(&shared_control.lock);
@@ -276,12 +276,14 @@ void * actuator_loop(void * par) {
 		    continue;
 		}
 
-		clock_gettime(CLOCK_REALTIME,&end); //finisco di contare
+		clock_gettime(CLOCK_THREAD_CPUTIME_ID,&end); //finisco di contare
 		//aggiorno la variabile globale
-		pthread_mutex_lock(&actuator_wcet.lock);
-		actuator_wcet.value = difference_ns(&end,&start) / 1000000000.0;
-		pthread_mutex_unlock(&actuator_wcet.lock);
-
+		if((difference_ns(&end,&start)/1000)>(th->wcet)){
+			th->wcet=difference_ns(&end,&start)/1000;
+			pthread_mutex_lock(&actuator_wcet.lock);
+			actuator_wcet.value = difference_ns(&end,&start) / 1000;
+			pthread_mutex_unlock(&actuator_wcet.lock);
+		}
 	}
 	/* Clear */
     if (mq_close (actuator_qd) == -1) {
@@ -304,9 +306,10 @@ void * deferrable_server(void* par){
 	int control;
 	int reference; //nella traccia non è una variabile shared quindi devo trasformarla in tale
 	int b[BUF_SIZE];
-	double wcet1;
-	double wcet2;
-	double wcet3;
+	int wcet1;
+	int wcet2;
+	int wcet3;
+	float fattore_util;
 	
 	/* Code */
 	struct mq_attr attr;
@@ -383,6 +386,45 @@ void * deferrable_server(void* par){
 					perror ("DS: Not able to send message to diag");
 					continue;
 				}
+
+				pthread_mutex_lock(&acquirefilter_wcet.lock);
+				wcet1 = acquirefilter_wcet.value;
+				pthread_mutex_unlock(&acquirefilter_wcet.lock);
+
+				pthread_mutex_lock(&control_wcet.lock);
+				wcet2 = control_wcet.value;
+				pthread_mutex_unlock(&control_wcet.lock);
+
+				pthread_mutex_lock(&actuator_wcet.lock);
+				wcet3 = actuator_wcet.value;
+				pthread_mutex_unlock(&actuator_wcet.lock);
+
+				fattore_util=(float)wcet1/TICK_TIME+(float)wcet2/TICK_TIME*BUF_SIZE+(float)wcet3/TICK_TIME*BUF_SIZE;
+
+				sprintf(message,"%d-",wcet1);
+				if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
+						perror ("DS: Not able to send message to WCETdiag");
+						continue;
+				}
+
+				sprintf(message,"%d-",wcet2);
+				if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
+						perror ("DS: Not able to send message to WCETdiag");
+						continue;
+				}
+
+				sprintf(message,"%d",wcet3);
+				if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
+						perror ("DS: Not able to send message to WCETdiag");
+						continue;
+				}
+
+				sprintf(message,"%f",fattore_util);
+				if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
+						perror ("DS: Not able to send message to WCETdiag");
+						continue;
+				}
+
 			}else{//se ho ricevuto una wcetdiagreq
 			
 				pthread_mutex_lock(&acquirefilter_wcet.lock);
@@ -397,19 +439,27 @@ void * deferrable_server(void* par){
 				wcet3 = actuator_wcet.value;
 				pthread_mutex_unlock(&actuator_wcet.lock);
 
-				sprintf(message,"%f-",wcet1);
+				fattore_util=(float)wcet1/TICK_TIME+(float)wcet2/TICK_TIME*BUF_SIZE+(float)wcet3/TICK_TIME*BUF_SIZE;
+
+				sprintf(message,"%d-",wcet1);
 				if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
 						perror ("DS: Not able to send message to WCETdiag");
 						continue;
 				}
 
-				sprintf(message,"%f-",wcet2);
+				sprintf(message,"%d-",wcet2);
 				if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
 						perror ("DS: Not able to send message to WCETdiag");
 						continue;
 				}
 
-				sprintf(message,"%f",wcet3);
+				sprintf(message,"%d",wcet3);
+				if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
+						perror ("DS: Not able to send message to WCETdiag");
+						continue;
+				}
+
+				sprintf(message,"%f",fattore_util);
 				if (mq_send (res_qd, message, strlen(message)+1,0) == -1) {
 						perror ("DS: Not able to send message to WCETdiag");
 						continue;
@@ -452,7 +502,6 @@ int main(void)
 	pthread_attr_setinheritsched(&myattr, PTHREAD_EXPLICIT_SCHED); 
 
 	//DEFERRABLE SERVER THREAD
-
 	periodic_thread DS_th;
 	DS_th.period = TICK_TIME/2;
 	DS_th.priority = 55;
@@ -465,6 +514,7 @@ int main(void)
 	periodic_thread acquire_filter_th;
 	acquire_filter_th.period = TICK_TIME;
 	acquire_filter_th.priority = 50;
+	acquire_filter_th.wcet = 0;
 
 	myparam.sched_priority = acquire_filter_th.priority;
 	pthread_attr_setschedparam(&myattr, &myparam); 
@@ -474,6 +524,7 @@ int main(void)
 	periodic_thread control_th;
 	control_th.period = TICK_TIME*BUF_SIZE;
 	control_th.priority = 45;
+	control_th.wcet = 0;
 
 	myparam.sched_priority = control_th.priority;
 	pthread_attr_setschedparam(&myattr, &myparam); 
@@ -483,6 +534,7 @@ int main(void)
 	periodic_thread actuator_th;
 	actuator_th.period = TICK_TIME*BUF_SIZE;
 	actuator_th.priority = 45;
+	actuator_th.wcet = 0;
 
 	pthread_attr_setschedparam(&myattr, &myparam); 
 	pthread_create(&actuator_thread,&myattr,actuator_loop,(void*)&actuator_th);

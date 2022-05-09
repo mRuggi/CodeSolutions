@@ -6,7 +6,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 # This is free software: you are free to change and redistribute it.
 # There is NO WARRANTY, to the extent permitted by law.
 
-# Make data base, printed on Sun May  8 20:19:48 2022
+# Make data base, printed on Mon May  9 19:18:43 2022
 
 # Variables
 
@@ -30,8 +30,6 @@ XDG_SESSION_TYPE = x11
 VSCODE_LOG_NATIVE = false
 # automatic
 ?D = $(patsubst %/,%,$(dir $?))
-# environment
-G_ENABLE_DIAGNOSTIC = 0
 # automatic
 @D = $(patsubst %/,%,$(dir $@))
 # environment
@@ -51,7 +49,7 @@ VTE_VERSION = 6001
 # environment
 VSCODE_NLS_CONFIG = {"locale":"it","availableLanguages":{},"_languagePackSupport":true}
 # environment
-JOURNAL_STREAM = 8:46417
+JOURNAL_STREAM = 8:25509
 # environment
 XDG_CONFIG_DIRS = /etc/xdg/xdg-ubuntu:/etc/xdg
 # environment
@@ -69,11 +67,11 @@ USERNAME = mruggi
 # environment
 XDG_DATA_DIRS = /usr/share/ubuntu:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop
 # environment
-DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus
+DBUS_SESSION_BUS_ADDRESS = unix:path=/run/user/1000/bus,guid=b054aa2cfbe0e0c45981128c62794c5d
 # environment
 VSCODE_VERBOSE_LOGGING = true
 # environment
-MANAGERPID = 811
+MANAGERPID = 822
 # environment
 CLUTTER_IM_MODULE = ibus
 # environment
@@ -89,7 +87,7 @@ PATH = /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/
 # environment
 GPG_AGENT_INFO = /run/user/1000/gnupg/S.gpg-agent:0:1
 # environment
-SESSION_MANAGER = local/mruggi-Virtual-Machine:@/tmp/.ICE-unix/1119,unix/mruggi-Virtual-Machine:/tmp/.ICE-unix/1119
+SESSION_MANAGER = local/mruggi-Virtual-Machine:@/tmp/.ICE-unix/1128,unix/mruggi-Virtual-Machine:/tmp/.ICE-unix/1128
 # environment
 XDG_RUNTIME_DIR = /run/user/1000
 # environment
@@ -107,7 +105,7 @@ DISABLE_WAYLAND = 1
 # environment
 ELECTRON_RUN_AS_NODE = 1
 # environment
-INVOCATION_ID = 0f0d709154d04e1484cb86e50d677bb9
+INVOCATION_ID = 34e9282f934b46d7a396561729f7ae9d
 # environment
 GDK_PIXBUF_MODULEDIR = /snap/code/95/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0/2.10.0/loaders
 # default
@@ -133,7 +131,7 @@ PWD = /home/mruggi/Scrivania/CodeSolutions/RTOSHW/HW1/HW1-SOL
 # default
 .LOADED := 
 # environment
-SSH_AGENT_PID = 1001
+SSH_AGENT_PID = 1010
 # environment
 ORIGINAL_XDG_CURRENT_DESKTOP = ubuntu:GNOME
 # environment
@@ -185,7 +183,7 @@ SHLVL = 1
 # environment
 GNOME_SHELL_SESSION_MODE = ubuntu
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-cd32f1dc-fae7-44b7-8400-b489c19ca02e.sock
+VSCODE_IPC_HOOK_EXTHOST = /run/user/1000/vscode-ipc-019fe7da-c027-47eb-92d2-98aa9ce022ee.sock
 # default
 MAKE_VERSION := 4.2.1
 # environment
@@ -200,8 +198,6 @@ XDG_CURRENT_DESKTOP = Unity
 %D = $(patsubst %/,%,$(dir $%))
 # default
 MAKE_COMMAND := make
-# environment
-OLDPWD = /home/mruggi/Scrivania/CodeSolutions/RTOSHW/HW1
 # default
 .VARIABLES := 
 # automatic
@@ -233,13 +229,15 @@ SNAP_NAME = code
 # environment
 LC_ALL = C
 # environment
+DBUS_STARTER_BUS_TYPE = session
+# environment
 QT4_IM_MODULE = ibus
 # environment
-GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/96157f0d_d89a_4937_848c_78a944094e9f
+GNOME_TERMINAL_SCREEN = /org/gnome/Terminal/screen/74fc043b_5c11_40e5_b9ad_bd238bea37c9
 # automatic
 ^F = $(notdir $^)
 # environment
-GNOME_TERMINAL_SERVICE = :1.90
+GNOME_TERMINAL_SERVICE = :1.82
 # default
 SUFFIXES := 
 # environment
@@ -257,7 +255,9 @@ LANG = C
 # environment
 TERM = xterm-256color
 # environment
-VSCODE_PID = 7122
+VSCODE_PID = 1570
+# environment
+DBUS_STARTER_ADDRESS = unix:path=/run/user/1000/bus,guid=b054aa2cfbe0e0c45981128c62794c5d
 # variable set hash-table stats:
 # Load=124/1024=12%, Rehash=0, Collisions=15/149=10%
 
@@ -267,9 +267,9 @@ VSCODE_PID = 7122
 
 # Directories
 
-# . (device 2049, inode 1120580): 23 files, no impossibilities.
+# . (device 2049, inode 1120580): 24 files, no impossibilities.
 
-# 23 files, no impossibilities in 1 directories.
+# 24 files, no impossibilities in 1 directories.
 
 # Implicit Rules
 
@@ -296,7 +296,7 @@ plant: plant.o rt-lib.o
 
 controller.o: controller.c rt-lib.h parameters.h
 #  Implicit rule search has not been done.
-#  Last modified 2022-05-08 20:19:19.189674929
+#  Last modified 2022-05-08 20:50:05.958216006
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 28):
@@ -304,7 +304,7 @@ controller.o: controller.c rt-lib.h parameters.h
 
 controller: controller.o rt-lib.o
 #  Implicit rule search has not been done.
-#  Last modified 2022-05-08 20:19:19.285671115
+#  Last modified 2022-05-08 20:50:06.070211711
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 10):
@@ -334,7 +334,7 @@ replica.c:
 
 diagWCET: diagWCET.c parameters.h
 #  Implicit rule search has not been done.
-#  Last modified 2022-05-08 20:19:19.417665872
+#  Last modified 2022-05-08 20:50:06.274203887
 #  File has been updated.
 #  Successfully updated.
 #  recipe to execute (from 'Makefile', line 19):
@@ -372,7 +372,7 @@ plant.c:
 # Not a target:
 controller.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-05-08 20:17:58.316897138
+#  Last modified 2022-05-08 20:30:55.750450108
 #  File has been updated.
 #  Successfully updated.
 
@@ -394,7 +394,7 @@ diag: diag.c parameters.h
 # Not a target:
 diagWCET.c:
 #  Implicit rule search has been done.
-#  Last modified 2022-05-08 20:18:27.5157315
+#  Last modified 2022-05-08 20:30:15.208018694
 #  File has been updated.
 #  Successfully updated.
 
@@ -456,12 +456,12 @@ rt-lib.h:
 
 # No general ('VPATH' variable) search path.
 
-# strcache buffers: 1 (0) / strings = 29 / storage = 264 B / avg = 9 B
-# current buf: size = 8162 B / used = 264 B / count = 29 / avg = 9 B
+# strcache buffers: 1 (0) / strings = 30 / storage = 274 B / avg = 9 B
+# current buf: size = 8162 B / used = 274 B / count = 30 / avg = 9 B
 
-# strcache performance: lookups = 85 / hit rate = 65%
+# strcache performance: lookups = 86 / hit rate = 65%
 # hash-table stats:
-# Load=29/8192=0%, Rehash=0, Collisions=1/85=1%
-# Finished Make data base on Sun May  8 20:19:48 2022
+# Load=30/8192=0%, Rehash=0, Collisions=1/86=1%
+# Finished Make data base on Mon May  9 19:18:43 2022
 
  

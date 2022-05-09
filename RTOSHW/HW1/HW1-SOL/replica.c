@@ -314,6 +314,7 @@ int main(void)
 	periodic_thread acquire_filter_th;
 	acquire_filter_th.period = TICK_TIME;
 	acquire_filter_th.priority = 50;
+	acquire_filter_th.wcet = 0;
 
 	myparam.sched_priority = acquire_filter_th.priority;
 	pthread_attr_setschedparam(&myattr, &myparam); 
@@ -323,6 +324,7 @@ int main(void)
 	periodic_thread control_th;
 	control_th.period = TICK_TIME*BUF_SIZE;
 	control_th.priority = 45;
+	control_th.wcet = 0;
 
 	myparam.sched_priority = control_th.priority;
 	pthread_attr_setschedparam(&myattr, &myparam); 
@@ -332,6 +334,7 @@ int main(void)
 	periodic_thread actuator_th;
 	actuator_th.period = TICK_TIME*BUF_SIZE;
 	actuator_th.priority = 45;
+	actuator_th.wcet = 0;
 
 	pthread_attr_setschedparam(&myattr, &myparam); 
 	pthread_create(&actuator_thread,&myattr,actuator_loop,(void*)&actuator_th);

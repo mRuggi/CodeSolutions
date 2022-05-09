@@ -1,4 +1,4 @@
-#define TICK_TIME 100000
+#define TICK_TIME 100000 //100 millisecondi 100000 microsecondi
 #define SENSOR_QUEUE_NAME   "/sensor_queue"
 #define ACTUATOR_QUEUE_NAME "/actuator_queue"
 #define REFERENCE_QUEUE_NAME "/reference_queue"

@@ -38,6 +38,24 @@ int main(int argc, char ** argv)
         }
     }
     printf("\n");
+
+    printf("DIAGWCET in format ACQFILTERWCET-CONTROLWCET-ACTUATORWCET (all in microseconds)\n");
+
+    for(int i=0; i<3; i++){
+        if (mq_receive(res_qd,message,MAX_MSG_SIZE,NULL) == -1){
+                //printf ("No answer ...\n");							//DEBUG
+        }else{
+                printf(message);
+        }
+    }
+    printf("\nUTILIZATION FACTOR: ");
+     if (mq_receive(res_qd,message,MAX_MSG_SIZE,NULL) == -1){
+                //printf ("No answer ...\n");							//DEBUG
+        }else{
+                printf(message);
+        }
+    printf("\n");
+
     
     //clear (chiusura descrittori code)
 
