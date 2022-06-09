@@ -15,22 +15,24 @@
 /* Numero di task */
 #define TASK_NUM 5
 
-/* Periodo di Base */
+/* Periodi */
 #define ENCODER_PERIOD 5
 #define REAL_TIME_PERIOD ENCODER_PERIOD/2
-#define SCOPE_PERIOD ENCODER_PERIOD*100
+#define SCOPE_PERIOD ENCODER_PERIOD*2
+#define DIAG_PERIOD ENCODER_PERIOD/2
 
 /*Priorità dei task*/
-#define PRIORITY_RT (tskIDLE_PRIORITY + 3)
+#define PRIORITY_RT (tskIDLE_PRIORITY + 4)
+#define PRIORITY_DIAG (tskIDLE_PRIORITY + 3)
 #define PRIORITY_ENCODER (tskIDLE_PRIORITY + 2)
-#define PRIORITY_DIAGSCOPE (tskIDLE_PRIORITY + 1)
+#define PRIORITY_SCOPE (tskIDLE_PRIORITY + 1)
 
 /* Definizione dei task da implementare */
 static void encoder(void* pvParameters);
 static void rt_1(void* pvParameters);
 static void rt_2(void* pvParameters);
 static void scope(void* pvParameters);
-//static void diagnostic(void* pvParameters);
+static void diagnostic(void* pvParameters);
 
 struct enc_str
 {
@@ -79,8 +81,8 @@ void main_homework(void)
 	xTaskCreate(encoder,"Encoder",configMINIMAL_STACK_SIZE,NULL,PRIORITY_ENCODER,NULL);
 	xTaskCreate(rt_1, "rt1", configMINIMAL_STACK_SIZE, NULL, PRIORITY_RT, NULL);
 	xTaskCreate(rt_2,"rt2",configMINIMAL_STACK_SIZE,NULL,PRIORITY_RT,NULL);
-	xTaskCreate(scope,"scope",configMINIMAL_STACK_SIZE,NULL,PRIORITY_DIAGSCOPE,NULL);
-	//xTaskCreate(diagnostic,"diagnostic",configMINIMAL_STACK_SIZE,NULL,PRIORITY_DIAGSCOPE,NULL);
+	xTaskCreate(scope,"scope",configMINIMAL_STACK_SIZE,NULL,PRIORITY_SCOPE,NULL);
+	xTaskCreate(diagnostic,"diagnostic",configMINIMAL_STACK_SIZE,NULL,PRIORITY_DIAG,NULL);
 
 	//start scheduler
 	vTaskStartScheduler();
@@ -151,9 +153,10 @@ static void rt_1(void* pvParameters){
 
 	int last_value=0;
 
+	TickType_t finish_time;
+
 	for(;;){
 		vTaskDelayUntil(&xNextWakeTime, xBlockTime );
-
 		xSemaphoreTake(enc_data.lock,portMAX_DELAY);
 			if( last_value == 0 && enc_data.slit == 1){
 				last_value = 1;
@@ -167,6 +170,18 @@ static void rt_1(void* pvParameters){
 				last_value = 0;
 			}
 		xSemaphoreGive(enc_data.lock);
+
+		finish_time = xTaskGetTickCount(); //prendo il tempo di fine
+
+		if (finish_time < (xNextWakeTime + xBlockTime)){
+			xSemaphoreTake(slack_rt1.lock, portMAX_DELAY);
+			slack_rt1.slack_time = pdTICKS_TO_MS((xNextWakeTime + xBlockTime) - finish_time);
+			xSemaphoreGive(slack_rt1.lock);
+		}
+		else {
+			printf("\nDEADLINE MISS RT1");
+		}
+		
 	}
 }
 
@@ -186,6 +201,8 @@ static void rt_2(void* pvParameters){
 
 	int first_measure=1;
 	int last_home_slit=0;
+
+	TickType_t finish_time;
 
 	for(;;){
 		vTaskDelayUntil(&xNextWakeTime, xBlockTime );
@@ -210,6 +227,16 @@ static void rt_2(void* pvParameters){
 				last_home_slit = 0;
 			}
 		xSemaphoreGive(enc_data.lock);
+
+		finish_time = xTaskGetTickCount(); //prendo il tempo di fine
+		if (finish_time < (xNextWakeTime + xBlockTime)) {
+			xSemaphoreTake(slack_rt2.lock, portMAX_DELAY);
+			slack_rt2.slack_time = pdTICKS_TO_MS((xNextWakeTime + xBlockTime) - finish_time);
+			xSemaphoreGive(slack_rt2.lock);
+		}
+		else {
+			printf("\nDEADLINE MISS RT2");
+		}
 	}
 }
 
@@ -247,15 +274,14 @@ static void scope(void* pvParameters){
 	}
 }
 
-/*static void diagnostic(void* pvParameters) {
+static void diagnostic(void* pvParameters) {
 		
 	(void) pvParameters;
 
 	printf("diag Start\n");
 
-
 	TickType_t xNextWakeTime;
-	const TickType_t xBlockTime = pdMS_TO_TICKS(periods[1]);
+	const TickType_t xBlockTime = pdMS_TO_TICKS(DIAG_PERIOD);
 	xNextWakeTime = xTaskGetTickCount();
     
 	unsigned long int avg_slack=0;
@@ -268,7 +294,7 @@ static void scope(void* pvParameters){
 		xSemaphoreTake(slack_rt1.lock,portMAX_DELAY);
 		xSemaphoreTake(slack_rt2.lock,portMAX_DELAY);
 
-		avg_slack += (slack_rt1.slack_time + slack_rt2.slack_time)/2000; 	//average in microseconds
+		avg_slack += (slack_rt1.slack_time + slack_rt2.slack_time)*1000/2; 	//average in microseconds
 
 		xSemaphoreGive(slack_rt2.lock);
 		xSemaphoreGive(slack_rt1.lock);
@@ -276,8 +302,8 @@ static void scope(void* pvParameters){
 		i++;
 		if(i == rounds){
 			avg_slack = avg_slack/rounds;
-			printf("**********SLACK TIME: %ld us**********\n",avg_slack);
+			printf("**********SLACK TIME: %lu us**********\n",avg_slack);
 			i = 0;
 		}
 	}
-}*/
+}
